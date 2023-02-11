@@ -74,3 +74,42 @@ userSchema.methods.generateRefreshAuthToken = function () {
         })
     });
 }
+
+userSchema.methods.createSession = function () {
+    let user = this;
+
+    return user.generateRefreshAuthToken().then((refreshToken) => {
+        return saveSessionToDatabase(user, refreshToken);
+    }).then((refreshToken) => {
+        // saved session successfully
+        return refreshToken;
+    }).catch((e) => {
+        return Promise.reject('Failed to save session to database.\n' + e);
+    });
+}
+
+
+
+// Helper methods
+let saveSessionToDatabase = (user, refreshToken) => {
+    // Save the session to the database
+    return new Promise((resolve, reject) => {
+        let expiresAt = generateRefreshTokenExpiryTime();
+
+        user.sessions.push({ 'token': refreshToken, expiresAt });
+
+        user.save().then(() => {
+            // saved session successfully
+            return resolve(refreshToken);
+        }).catch((e) => {
+            reject(e);
+        });
+    });
+}
+
+let generateRefreshTokenExpiryTime = () => {
+    let daysUntilExpire = "10";
+    let secondsUntilExpire = ((daysUntilExpire * 24) * 60) * 60;
+
+    return ((Date.now() / 1000) + secondsUntilExpire);
+}
