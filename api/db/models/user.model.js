@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const _ = require('lodash');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
     email: {
@@ -88,6 +89,68 @@ userSchema.methods.createSession = function () {
     });
 }
 
+// Model methods
+
+userSchema.statics.findByIdAndToken = function (_id, token) {
+    // Find a user by id and token
+    // Used in auth middleware (verifySession)
+
+    const User = this;
+
+    return User.findOne({
+        _id,
+        'sessions.token': token
+    });
+}
+
+userSchema.statics.findByCredentials = function (email, password) {
+    let user = this;
+
+    return user.findOne({ email }).then((user) => {
+        if (!user) return Promise.reject();
+
+        return new Promise((resolve, reject) => {
+            // Use bcrypt.compare to compare password and user.password
+            bcrypt.compare(password, user.password, (err, res) => {
+                if (res) {
+                    resolve(user);
+                } else {
+                    reject();
+                }
+            });
+        });
+    });
+}
+
+userSchema.statics.hasRefreshTokenExpired = (expiresAt) => {
+    let secondsSinceEpoch = Date.now() / 1000;
+    if (expiresAt > secondsSinceEpoch) {
+        // Refresh token has not expired
+        return false;
+    } else {
+        // Refresh token has expired
+        return true;
+    }
+};
+
+// Middleware
+// Before a user document is saved, this code runs
+userSchema.pre('save', function (next) {
+    let user = this;
+    let costFactor = 10;
+
+    if (user.isModified('password')) {
+        // User password has been modified
+        bcrypt.genSalt(costFactor, (err, salt) => {
+            bcrypt.hash(user.password, salt, (err, hash) => {
+                user.password = hash;
+                next();
+            });
+        });
+    } else {
+        next();
+    }
+});
 
 
 // Helper methods
@@ -113,3 +176,7 @@ let generateRefreshTokenExpiryTime = () => {
 
     return ((Date.now() / 1000) + secondsUntilExpire);
 }
+
+const User = mongoose.model('User', userSchema);
+
+module.exports = { User }
