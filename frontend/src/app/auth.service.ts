@@ -26,6 +26,10 @@ export class AuthService {
           res.headers.get('x-access-token') ?? '',
           res.headers.get('x-refresh-token') ?? '',
         );
+
+        if (!res.headers.get('x-access-token') || !res.headers.get('x-refresh-token')) {
+          this.logout();
+        }
       })
     );
   }
@@ -62,6 +66,10 @@ export class AuthService {
     }).pipe(
       tap((res: HttpResponse<any>) => {
         this.setAccessToken(res.headers.get('x-access-token') ?? '');
+
+        if (!res.headers.get('x-access-token')) {
+          this.logout();
+        }
       })
     )
   }
