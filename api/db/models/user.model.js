@@ -49,7 +49,7 @@ userSchema.methods.generateAccessAuthToken = function () {
             },
             process.env.JWT_SECRET,
             {
-                expiresIn: "10s"
+                expiresIn: "15m"
             },
             (err, token) => {
                 if (!err) {
