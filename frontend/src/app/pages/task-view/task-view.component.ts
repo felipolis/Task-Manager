@@ -31,7 +31,7 @@ export class TaskViewComponent implements OnInit {
           this.tasks = tasks;
         })
       } else {
-        this.tasks = [];
+        this.tasks = undefined as any;
       }
     });
 
