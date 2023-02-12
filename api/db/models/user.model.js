@@ -91,6 +91,10 @@ userSchema.methods.createSession = function () {
 }
 
 // Model methods
+userSchema.statics.getJWTSecret = () => {
+    return process.env.JWT_SECRET;
+}
+
 
 userSchema.statics.findByIdAndToken = function (_id, token) {
     // Find a user by id and token
