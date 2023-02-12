@@ -1,4 +1,4 @@
-import { HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { shareReplay, tap } from 'rxjs/operators';
@@ -11,7 +11,8 @@ export class AuthService {
 
   constructor(
     private webService: WebRequestService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) { }
 
 
@@ -31,6 +32,8 @@ export class AuthService {
 
   logout() {
     this.removeSession();
+
+    this.router.navigate(['/login']);
   }
 
   getAccessToken() {
@@ -45,15 +48,33 @@ export class AuthService {
     return localStorage.getItem('x-refresh-token');
   }
 
+  getUserId() {
+    return localStorage.getItem('user-id');
+  }
+
+  getNewAccessToken() {
+    return this.http.get(`${this.webService.ROOT_URL}/users/me/access-token`, {
+      headers: {
+        'x-refresh-token': this.getRefreshToken() ?? '',
+        '_id': this.getUserId() ?? ''
+      },
+      observe: 'response'
+    }).pipe(
+      tap((res: HttpResponse<any>) => {
+        this.setAccessToken(res.headers.get('x-access-token') ?? '');
+      })
+    )
+  }
+
   private setSession(userId: string, accessToken: string, refreshToken: string) {
-    localStorage.setItem('userId', userId);
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('user-id', userId);
+    localStorage.setItem('x-access-token', accessToken);
+    localStorage.setItem('x-refresh-token', refreshToken);
   }
 
   private removeSession() {
-    localStorage.removeItem('userId');
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user-id');
+    localStorage.removeItem('x-access-token');
+    localStorage.removeItem('x-refresh-token');
   }
 }

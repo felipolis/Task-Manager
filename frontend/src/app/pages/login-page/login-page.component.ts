@@ -24,6 +24,7 @@ export class LoginPageComponent implements OnInit {
       if (res.status === 200) {
         // we have logged in successfully
         this.router.navigate(['/lists']);
+        console.log(res);
       }
       console.log(res);
       

@@ -49,7 +49,7 @@ userSchema.methods.generateAccessAuthToken = function () {
             },
             process.env.JWT_SECRET,
             {
-                expiresIn: "15m"
+                expiresIn: "10s"
             },
             (err, token) => {
                 if (!err) {
@@ -177,7 +177,8 @@ let saveSessionToDatabase = (user, refreshToken) => {
 
 let generateRefreshTokenExpiryTime = () => {
     let daysUntilExpire = "10";
-    let secondsUntilExpire = ((daysUntilExpire * 24) * 60) * 60;
+    //let secondsUntilExpire = ((daysUntilExpire * 24) * 60) * 60;
+    let secondsUntilExpire = 15;
 
     return ((Date.now() / 1000) + secondsUntilExpire);
 }
